@@ -215,44 +215,49 @@ def main(max_nodes_per_group, max_channels_total):
     def save_groups(directory, saved_groups):
         base_file_name = f'max_nodes_{max_nodes_per_group}_max_channels_{max_channels_total}_{len(saved_groups)}_{int(time.time()*1000)}'
         
-        with open(f'{directory}/nodes/{base_file_name}', 'w') as file:
+        with open(f'results/{directory}/nodes/{base_file_name}', 'w') as file:
             for group in saved_groups:
                 file.write(','.join([str(node_id) for node_id in list(group.node_ids)]) + "\n")
         
-        with open(f'{directory}/channels/{base_file_name}', 'w') as file:
+        with open(f'results/{directory}/channels/{base_file_name}', 'w') as file:
             for group in saved_groups:
                 file.write(','.join([str(node_id) for node_id in list(get_external_channel_ids_for_group(group))]) + "\n")
                 
     save_groups('groups', groups)
+    save_groups('merged_groups', groups)
                 
     merged_groups = copy.deepcopy(groups)
     random.shuffle(merged_groups)
 
+    is_first_try = True
     is_merging = True
     curr_group_index = 0
 
-    while curr_group_index < len(merged_groups):
-        curr_group = merged_groups[curr_group_index]
-        is_completed_merge = False
+    while is_first_try:
+        while curr_group_index < len(merged_groups):
+            curr_group = merged_groups[curr_group_index]
+            is_completed_merge = False
 
-        group_indexs = list(range(curr_group_index + 1, len(merged_groups)))
-        random.shuffle(group_indexs)
+            group_indexs = list(range(curr_group_index + 1, len(merged_groups)))
+            random.shuffle(group_indexs)
 
-        for group_index in group_indexs:
-            group_node_ids = list(merged_groups[group_index].node_ids)
+            for group_index in group_indexs:
+                group_node_ids = list(merged_groups[group_index].node_ids)
 
-            for node_id in group_node_ids:
-                add_node_id_to_group(curr_group, node_id)
+                for node_id in group_node_ids:
+                    add_node_id_to_group(curr_group, node_id)
 
-            if is_valid_group(curr_group):
-                del merged_groups[group_index]
-                merged_groups[curr_group_index] = curr_group
-                save_groups('merged_groups', merged_groups)
-                is_completed_merge = True
-                break
+                if is_valid_group(curr_group):
+                    del merged_groups[group_index]
+                    merged_groups[curr_group_index] = curr_group
+                    save_groups('merged_groups', merged_groups)
+                    is_completed_merge = True
+                    break
 
-            for node_id in group_node_ids:
-                remove_node_id_from_group(curr_group, node_id)
+                for node_id in group_node_ids:
+                    remove_node_id_from_group(curr_group, node_id)
 
-        if not is_completed_merge:
-            curr_group_index += 1
+            if not is_completed_merge:
+                curr_group_index += 1
+        
+        is_first_try = False
