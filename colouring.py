@@ -54,20 +54,31 @@ def main(digits):
         G.add_edges_from(edge_pairs)
 
         is_trying = True
-        curr_max_channels = max_channels
+        is_min = False
+        min_max_channels = max_channels
 
         while is_trying:
             try:
-                colours = graph_coloring(G, curr_max_channels)
+                colours = graph_coloring(G, min_max_channels)
                 is_trying = False
             except Exception:
-                curr_max_channels += 1
+                is_min = True
+                min_max_channels += 1
 
+        strict_min_max_channels = min_max_channels
+
+        if not is_min:
+            for curr_max_channels in range(min_max_channels, 0, -1):
+                try:
+                    colours = graph_coloring(G, curr_max_channels)
+                    strict_min_max_channels = curr_max_channels
+                except Exception:
+                    break
 
         new_file_name = file_name
 
-        if curr_max_channels != max_channels:
-            new_file_name += f'_actual_channels_{curr_max_channels}'
+        if strict_min_max_channels != max_channels:
+            new_file_name += f'_actual_channels_{strict_min_max_channels}'
 
         with open(f'results/assigned_groups/{new_file_name}', 'w') as file:
             file.write(str(colours))

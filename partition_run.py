@@ -1,6 +1,8 @@
 import os
 import partition
 
+num_repeats = 1000000
+
 node_range = list(range(1, 135))
 channel_range = list(range(3, 135))
 
@@ -25,7 +27,7 @@ def main():
         if not os.path.exists(directory):
             os.makedirs(directory)
     
-    while True:
+    for i in range(num_repeats):
         for num_nodes in node_range:
             for num_channels in channel_range:
                 partition.main(num_nodes, num_channels)
