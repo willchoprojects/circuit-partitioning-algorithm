@@ -2,7 +2,7 @@ clc
 close all
 clear all
 
-data = load('data_1680611280.csv');
+data = load('data_merged_1680621616.csv');
 
 % Split the data into independent and dependent variables
 x1 = data(:,1);

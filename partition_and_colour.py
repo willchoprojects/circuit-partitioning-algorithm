@@ -35,7 +35,7 @@ class Group:
     def __str__(self):
         return f'Group: id – {self.id}, node_ids – {self.node_ids}'
 
-def main(max_nodes_per_group, max_channels_total):
+def main(base_directory, max_nodes_per_group, max_channels_total):
     # SETUP
     connections_by_id = {}
     nodes_by_id = {}
@@ -209,15 +209,15 @@ def main(max_nodes_per_group, max_channels_total):
     def save_groups(saved_groups, num_channels_used, colours_used):
         base_file_name = f'max_nodes_{max_nodes_per_group}_max_channels_{num_channels_used}_{len(saved_groups)}_{int(time.time()*1000)}'
 
-        with open(f'results/nodes/{base_file_name}', 'w') as file:
+        with open(f'{base_directory}/nodes/{base_file_name}', 'w') as file:
             for group in saved_groups:
                 file.write(','.join([str(node_id) for node_id in list(group.node_ids)]) + "\n")
 
-        with open(f'results/channels/{base_file_name}', 'w') as file:
+        with open(f'{base_directory}/channels/{base_file_name}', 'w') as file:
             for group in saved_groups:
                 file.write(','.join([str(node_id) for node_id in list(get_external_channel_ids_for_group(group))]) + "\n")
 
-        with open(f'results/channel_assignments/{base_file_name}', 'w') as file:
+        with open(f'{base_directory}/channel_assignments/{base_file_name}', 'w') as file:
             file.write(str(colours_used))
 
     def check_colouring(curr_merged_groups):
@@ -283,10 +283,14 @@ def main(max_nodes_per_group, max_channels_total):
     merged_groups = copy.deepcopy(groups)
     random.shuffle(merged_groups)
 
-    is_first_try = True
     curr_group_index = 0
+    is_merging = True
 
-    while is_first_try:
+    check_colouring(merged_groups)
+
+    while is_merging and len(merged_groups) > 1:
+        is_merging = False
+        
         while curr_group_index < len(merged_groups):
             curr_group = merged_groups[curr_group_index]
             is_completed_merge = False
@@ -307,6 +311,7 @@ def main(max_nodes_per_group, max_channels_total):
                     check_colouring(merged_groups)
 
                     is_completed_merge = True
+                    is_merging = True
                     break
 
                 for node_id in group_node_ids:
@@ -314,5 +319,3 @@ def main(max_nodes_per_group, max_channels_total):
 
             if not is_completed_merge:
                 curr_group_index += 1
-
-        is_first_try = False
