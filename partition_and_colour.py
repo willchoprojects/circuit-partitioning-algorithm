@@ -102,16 +102,13 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
 
     endpoint_count_by_channel_id = dict(endpoint_count_by_channel_id)
 
-    channel_ids_by_node_id = defaultdict(set)
+    channel_id_count_by_node_id = defaultdict(lambda: defaultdict(int))
 
     for connection in connections_by_id.values():
-        channel_ids_by_node_id[connection.sender_node_id].add(connection.channel_id)
-        channel_ids_by_node_id[connection.receiver_node_id].add(connection.channel_id)
+        channel_id_count_by_node_id[connection.sender_node_id][connection.channel_id] += 1
+        channel_id_count_by_node_id[connection.receiver_node_id][connection.channel_id] += 1
 
-    channel_ids_by_node_id = dict(channel_ids_by_node_id)
-
-
-
+    channel_id_count_by_node_id = dict(channel_id_count_by_node_id)
 
     # RUN
     groups_by_id = {}
@@ -143,8 +140,8 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
     def add_node_id_to_group(group, node_id):
         group.node_ids.add(node_id)
 
-        for channel_id in channel_ids_by_node_id[node_id]:
-            group.endpoint_count_by_channel_id[channel_id] += 1
+        for channel_id, count in channel_id_count_by_node_id[node_id].items():
+            group.endpoint_count_by_channel_id[channel_id] += count
 
         for connected_node_id in connected_node_ids_by_node_id[node_id]:
             group.connection_count_by_external_node_ids[connected_node_id] += 1
@@ -156,8 +153,8 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
     def remove_node_id_from_group(group, node_id):
         group.node_ids.remove(node_id)
 
-        for channel_id in channel_ids_by_node_id[node_id]:
-            group.endpoint_count_by_channel_id[channel_id] -= 1
+        for channel_id, count in channel_id_count_by_node_id[node_id].items():
+            group.endpoint_count_by_channel_id[channel_id] -= count
 
         removed_channel_ids = []
         for channel_id, endpoint_count in group.endpoint_count_by_channel_id.items():
@@ -186,7 +183,7 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
 
     def is_valid_group(group):
         return (
-            len(group.node_ids) < max_nodes_per_group
+            len(group.node_ids) <= max_nodes_per_group
             and len(get_external_channel_ids_for_group(group)) <= max_channels_total
         )
 
@@ -220,7 +217,7 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
         with open(f'{base_directory}/channel_assignments/{base_file_name}', 'w') as file:
             file.write(str(colours_used))
 
-    def check_colouring(curr_merged_groups):
+    def check_colouring(curr_merged_groups, is_saving=False):
         edge_pairs = []
 
         for curr_merged_group in curr_merged_groups:
@@ -255,7 +252,8 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
                 except Exception:
                     break
 
-        save_groups(curr_merged_groups, strict_min_max_channels, colours)
+        if is_saving:
+            save_groups(curr_merged_groups, strict_min_max_channels, colours)
 
 
     while len(node_ids_claimed) < len(node_ids_all):
@@ -290,7 +288,7 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
 
     while is_merging and len(merged_groups) > 1:
         is_merging = False
-        
+
         while curr_group_index < len(merged_groups):
             curr_group = merged_groups[curr_group_index]
             is_completed_merge = False
@@ -299,14 +297,16 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
             random.shuffle(group_indexs)
 
             for group_index in group_indexs:
-                group_node_ids = list(merged_groups[group_index].node_ids)
+                group_node_ids = list(curr_group.node_ids) + list(merged_groups[group_index].node_ids)
+
+                curr_merged_group = Group(curr_group.id)
 
                 for node_id in group_node_ids:
-                    add_node_id_to_group(curr_group, node_id)
+                    add_node_id_to_group(curr_merged_group, node_id)
 
-                if is_valid_group(curr_group):
+                if is_valid_group(curr_merged_group):
                     del merged_groups[group_index]
-                    merged_groups[curr_group_index] = curr_group
+                    merged_groups[curr_group_index] = curr_merged_group
 
                     check_colouring(merged_groups)
 
@@ -314,8 +314,7 @@ def main(base_directory, max_nodes_per_group, max_channels_total):
                     is_merging = True
                     break
 
-                for node_id in group_node_ids:
-                    remove_node_id_from_group(curr_group, node_id)
-
             if not is_completed_merge:
                 curr_group_index += 1
+
+    check_colouring(merged_groups, True)

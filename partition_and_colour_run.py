@@ -1,14 +1,12 @@
 import os
 import partition_and_colour
 
-num_repeats = 100
+num_repeats = 1
 
-# node_range = list(range(1, 135))
-node_range = list(range(154, 155))
-# channel_range = list(range(3, 135))
-channel_range = list(range(200, 205))
+node_range = list(range(1, 5))
+channel_range = list(range(3, 10))
 
-base_directory = 'results_large_channels'
+base_directory = 'results'
 nodes_directory = 'nodes'
 channels_directory = 'channels'
 channel_assignments_directory = 'channel_assignments'
