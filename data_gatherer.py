@@ -1,4 +1,5 @@
 import os
+import time
 from collections import defaultdict
 
 data = defaultdict(lambda: float('inf'))
@@ -16,6 +17,6 @@ for file_name in os.listdir('results/assigned_groups'):
     
     data[(max_nodes,max_channels)] = min(data[(max_nodes,max_channels)], num_cells)
 
-with open(f'data.csv', 'w') as file:
+with open(f'data_{int(time.time())}.csv', 'w') as file:
     for pair, cells in data.items():
         file.write(f'{pair[0]},{pair[1]},{cells}' + '\n')

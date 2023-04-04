@@ -2,7 +2,7 @@ clc
 close all
 clear all
 
-data = load('data.csv');
+data = load('data_1680611280.csv');
 
 % Split the data into independent and dependent variables
 x1 = data(:,1);
