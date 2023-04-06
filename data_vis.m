@@ -1,55 +1,100 @@
+%% Setup
+
 clc
 close all
 clear all
 
-data = load('data_merged_1680621616.csv');
+%% Parameters
 
-% Split the data into independent and dependent variables
-x1 = data(:,1);
-x2 = data(:,2);
-y = data(:,3);
+file_path = 'compiled_data/num_cells_data_expanded.csv';
+figures_path = 'result_figures/';
 
-% Define the grid
-n1 = length(unique(x1));
-n2 = length(unique(x2));
-xi = linspace(min(x1), max(x1), n1);
-yi = linspace(min(x2), max(x2), n2);
-[X,Y] = meshgrid(xi,yi);
+max_num_gates_per_cell = 131;
+max_num_total_channels = 131;
 
-% Interpolate the data onto the grid
-Z = griddata(x1,x2,y,X,Y,'linear');
+plotted_num_gates_per_cell = [8];
+plotted_num_total_channels = [4 10 20];
+
+%% Data Loading
+
+data = load(file_path);
+
+% Select a subset of rows and columns
+rows = 1:max_num_gates_per_cell;
+cols = 1:max_num_total_channels;
+data_subset = data(rows, cols);
+
+%% Directory Creation
+
+mkdir(figures_path);
+
+%% Max Gates per Cell Plots
+
+for num_gates_per_cell = plotted_num_gates_per_cell
+    row_data = data_subset(num_gates_per_cell,:);
+    figure;
+    scatter(1:size(row_data,2), row_data, 'filled');
+    xlabel('Max Channels Total');
+    ylabel('Number of Cells');
+    title(['Max Gates per Cell = ' num2str(num_gates_per_cell)]);
+
+    saveas(gcf, [figures_path 'max_num_gates_per_cell_' num2str(num_gates_per_cell) '.png']);
+end
+
+%% Max Total Channels Plots
+
+for num_total_channels = plotted_num_total_channels
+    col_index = num_total_channels;
+    col_data = data_subset(:,col_index);
+    figure;
+    scatter(1:size(col_data,1), col_data, 'filled');
+    xlabel('Max Gates per Cell');
+    ylabel('Number of Cells');
+    title(['Max Channels Total = ' num2str(num_total_channels)]);
+
+    saveas(gcf, [figures_path 'max_num_total_channels_' num2str(num_total_channels) '.png']);
+end
+
+%% Heatmap with Linear Scale
 
 figure
-subset = data(data(:,1) == 8, :);
-scatter(subset(:,2), subset(:,3), 'filled');
-xlabel('Max Channels Total');
-ylabel('Number of Cells');
-title('Max Gates per Cell = 8');
 
-figure
-subset = data(data(:,2) == 4, :);
-scatter(subset(:,1), subset(:,3), 'filled');
-xlabel('Max Gates per Cell');
-ylabel('Number of Cells');
-title('Max Channels Total = 4');
+[X,Y] = meshgrid(cols, rows);
 
-% Create a heatmap
-figure
-imagesc(xi, yi, Z);
-colorbar;
-xlabel('Max Gates per Cell');
-ylabel('Max Channels Total');
-title('Number of Cells');
+imagesc(X(1,:), Y(:,1), data_subset);
 
-figure
-imagesc(xi, yi, Z);
-colormap(jet); % or any other colormap of your choice
-clim([0 ceil(log2(max(y(:))))]); % set the color axis limits to cover the range of data
+colormap(jet);
 h = colorbar;
-set(gca, 'colorscale', 'log', 'clim', [1 2^ceil(log2(max(y(:))))]); % set logarithmic color scale with base 2
-xlabel('Max Gates per Cell');
-ylabel('Max Channels Total');
-title('Number of Cells');
-h.TickLabelInterpreter = 'tex'; % set the tick label interpreter to TeX
-ytick = get(h,'YTick'); % get the current tick locations
-h.YTickLabel = ytick; % set the tick labels to 2 raised to the power of the tick locations
+
+xlabel('Max Channels Total');
+ylabel('Max Gates per Cell');
+title('Number of Cells (Linear Scale)');
+
+h.TickLabelInterpreter = 'tex';
+ytick = get(h,'YTick');
+h.YTickLabel = ytick;
+
+saveas(gcf, [figures_path 'num_cells_linear_scale.png']);
+
+%% Heatmap with Log Scale
+
+figure
+
+[X,Y] = meshgrid(cols, rows);
+
+imagesc(X(1,:), Y(:,1), data_subset);
+
+colormap(jet);
+clim([0 ceil(log2(132))]);
+h = colorbar;
+set(gca, 'colorscale', 'log', 'clim', [1 2^ceil(log2(max_num_gates_per_cell))]);
+
+xlabel('Max Channels Total');
+ylabel('Max Gates per Cell');
+title('Number of Cells (Logarithmic Scale)');
+
+h.TickLabelInterpreter = 'tex';
+ytick = get(h,'YTick');
+h.YTickLabel = ytick;
+
+saveas(gcf, [figures_path 'num_cells_logarithmic_scale.png']);
