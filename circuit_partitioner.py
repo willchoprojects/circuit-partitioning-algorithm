@@ -7,7 +7,7 @@ from group import Group
 import channel_assigner
 
 class CircuitPartitioner():
-    def __init__(self, circuit_file_path, results_base_directory, max_num_gates_per_cell, max_num_total_channels, is_saving_intermediates=False, desired_min_max_channels=float('inf'), max_num_groups=float('inf'), max_num_total_channels_ceiling=float('inf'), is_minimizing=True, is_leaky_validation=False, leaky_validation_threshold=0.9, is_leaky_formation=False, leaky_formation_threshold=0.8):
+    def __init__(self, circuit_file_path, results_base_directory, max_num_gates_per_cell, max_num_total_channels, is_saving_intermediates=False, max_total_channels_ceiling=float('inf'), max_num_groups=float('inf'), is_minimizing=True, is_leaky_validation=False, leaky_validation_threshold=0.9, is_leaky_formation=False, leaky_formation_threshold=0.8):
         self.results_base_directory = results_base_directory
         self.circuit_file_path = circuit_file_path
         self.is_saving_intermediates = is_saving_intermediates
@@ -24,9 +24,8 @@ class CircuitPartitioner():
 
         self.max_num_gates_per_cell = max_num_gates_per_cell
         self.max_num_total_channels = max_num_total_channels
-        self.desired_min_max_channels = desired_min_max_channels
+        self.max_total_channels_ceiling = max_total_channels_ceiling
         self.max_num_groups = max_num_groups
-        self.max_num_total_channels_ceiling = max_num_total_channels_ceiling
         self.node_selector = NodeSelector(self.node_ids_all, self.node_id_by_connection_count, is_minimizing=is_minimizing, is_leaky_formation=is_leaky_formation, leaky_formation_threshold=leaky_formation_threshold)
 
         if is_leaky_validation:
@@ -133,9 +132,9 @@ class CircuitPartitioner():
         return edge_pairs
 
     def check_and_save_assignment(self, groups, is_saving=False):
-        channel_assignment = channel_assigner.get_channel_assignment(self.get_edge_pairs(groups), self.max_num_total_channels, self.desired_min_max_channels)
+        channel_assignment = channel_assigner.get_channel_assignment(self.get_edge_pairs(groups), self.max_num_total_channels, self.max_total_channels_ceiling)
 
-        if is_saving and len(set(channel_assignment.values())) <= self.max_num_total_channels_ceiling and len(groups) <= self.max_num_groups:
+        if is_saving and len(set(channel_assignment.values())) <= self.max_total_channels_ceiling and len(groups) <= self.max_num_groups:
             circuit_data_manager.save_circuit_groups(self.results_base_directory, groups, channel_assignment)
 
     def attempt_merges(self, groups):

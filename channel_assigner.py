@@ -17,7 +17,7 @@ def graph_coloring(graph, m):
 
     return colours
 
-def get_channel_assignment(edge_pairs, max_num_total_channels, desired_min_max_channels):
+def get_channel_assignment(edge_pairs, max_num_total_channels, max_total_channels_ceiling):
     G = nx.Graph()
     G.add_edges_from(edge_pairs)
 
@@ -34,7 +34,7 @@ def get_channel_assignment(edge_pairs, max_num_total_channels, desired_min_max_c
             min_max_channels += 1
 
     if not is_min:
-        for curr_max_channels in range(min(min_max_channels, desired_min_max_channels), 0, -1):
+        for curr_max_channels in range(min(min_max_channels, max_total_channels_ceiling), 0, -1):
             try:
                 channel_assignment = graph_coloring(G, curr_max_channels)
             except Exception:
