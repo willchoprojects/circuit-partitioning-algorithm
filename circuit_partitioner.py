@@ -134,6 +134,13 @@ class CircuitPartitioner():
     def check_and_save_assignment(self, groups, is_saving=False):
         channel_assignment = channel_assigner.get_channel_assignment(self.get_edge_pairs(groups), self.max_num_total_channels, self.max_total_channels_ceiling)
 
+        for group in groups:
+            for channel_id, endpoint_count in group.endpoint_count_by_channel_id.items():
+                endpoint_count_temp[channel_id] += endpoint_count
+
+        if endpoint_count_temp != self.endpoint_count_by_channel_id:
+            raise Exception("ASD")
+
         if is_saving and len(set(channel_assignment.values())) <= self.max_total_channels_ceiling and len(groups) <= self.max_num_groups:
             circuit_data_manager.save_circuit_groups(self.results_base_directory, groups, channel_assignment)
 
