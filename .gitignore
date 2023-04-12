@@ -1,6 +1,7 @@
 results/
 compiled_data/
 result_figures
+verilog_files/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

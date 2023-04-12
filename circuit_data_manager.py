@@ -2,7 +2,7 @@ from node import Node
 from connection import Connection
 import time
 
-def load_circuit(file_path):
+def load_circuit(file_path, is_considering_all=False):
     nodes_by_id = {}
     connections_by_id = {}
 
@@ -13,7 +13,9 @@ def load_circuit(file_path):
             try:
                 node_id = int(parts[1])
             except ValueError:
-                continue
+                if not is_considering_all:
+                    continue
+                node_id = parts[1]
 
             nodes_by_id[node_id] = Node(node_id)
 
@@ -24,14 +26,21 @@ def load_circuit(file_path):
             try:
                 node_id = int(parts[1])
             except ValueError:
-                continue
+                if not is_considering_all:
+                    continue
+                node_id = parts[1]
 
             node_id_strings_list = parts[2].split(',')
             for node_id_string in node_id_strings_list:
+                if node_id_string == '':
+                    continue
+                
                 try:
                     sender_node_id = int(node_id_string)
                 except ValueError:
-                    continue
+                    if not is_considering_all:
+                        continue
+                    sender_node_id = node_id_string
 
                 connections_by_id[len(connections_by_id)] = Connection(len(connections_by_id), sender_node_id, node_id)
 
@@ -40,6 +49,15 @@ def load_circuit(file_path):
         nodes_by_id[connection.receiver_node_id].connections.append(connection)
 
     return nodes_by_id, connections_by_id
+
+def load_circuit_groups(results_base_directory, file_name, nodes_by_id):
+    groups = {}
+    
+    with open(f'{results_base_directory}nodes/{file_name}', 'r') as file:
+        for i, line in enumerate(file):
+            groups[i] = [nodes_by_id[int(node_id)] for node_id in line.split(',')]
+    
+    return groups
 
 def save_circuit_groups(results_base_directory, groups, colours_used):
     resulting_max_num_gates_per_cell = max([len(group.node_ids) for group in groups])

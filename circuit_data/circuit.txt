@@ -1,6 +1,5 @@
-OUT;OUT_FINAL;a_0_0,a_0_1
-OUT;a_0_0;131
-OUT;a_0_1;124
+OUT;a_o_0;131
+OUT;a_o_1;124
 IN;a_i_0;
 IN;a_i_1;
 IN;b_i_1;
